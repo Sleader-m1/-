@@ -1,0 +1,96 @@
+import math
+import matplotlib.pyplot as plt
+from math import cos, sin, tan
+
+dx = 0.1 #Приращение (при уменьшении значения замедляется анимация, но увеличивается точность графика)
+flen = 10 #Размер функции
+elen = 10 #Размер эволюты
+xlen = 20 #Длина положительной части оси У
+ylen = 20 #Длина положительной части оси Х
+
+def X(t):
+    return t #Задание координаты Х в параметрическом виде (вместо "t")
+
+def Y(t):
+    return X(t) #Задание координаты У в параметрическом виде (вместо "t")
+
+def FirstDerivative(func, t): #Поиск первой производной
+    return (func(t+dx)-func(t-dx))/(2*dx)
+
+def SecondDerivative(func,  t): #Поиск второй производной
+    return (func(t + dx) - 2 * func(t) + func(t - dx)) / (dx**2)
+
+def FindAlfaAndBeta(t) : #Поиск координат центров кривизны
+    if (SecondDerivative(Y, t) * FirstDerivative(X, t) - SecondDerivative(X, t) * FirstDerivative(Y, t)) != 0:
+        alfa = X(t) - FirstDerivative(Y, t) * (FirstDerivative(X, t) * FirstDerivative(X, t) + FirstDerivative(Y, t) * FirstDerivative(Y, t)) /(SecondDerivative(Y, t)*FirstDerivative(X,t) - SecondDerivative(X,t)*FirstDerivative(Y,t))
+        beta = Y(t) + FirstDerivative(X, t)*(FirstDerivative(X, t) * FirstDerivative(X, t) + FirstDerivative(Y, t) * FirstDerivative(Y, t)) /(SecondDerivative(Y, t) * FirstDerivative(X, t) - SecondDerivative(X, t) * FirstDerivative(Y, t))
+        return [alfa, beta]
+
+def FindRadius(t): #Поиск радиуса и его построение на графике
+    alfa_beta = FindAlfaAndBeta(t)
+    x = X(t) - alfa_beta[0]
+    y = Y(t) - alfa_beta[1]
+    R = math.sqrt(x**2 + y**2)
+    plt.plot([X(t), alfa_beta[0]], [Y(t), alfa_beta[1]], label='Радиус кривизны', color='red')
+    return R
+
+def PrintOriginalFunc(): #Построение функции y(x)/y(t) и x(t)
+    function_len = -flen
+    plot5 = []
+    plot6 = []
+    while function_len < flen:
+            plot5.append(X(function_len))
+            plot6.append(Y(function_len))
+            function_len += dx
+    plt.plot(plot5, plot6, color = "black", label = 'Функция')
+    return 0
+
+def PrintEvolute(): #Построение эволюты
+    evol_len = -elen
+    plot1 = []
+    plot2 = []
+    while (evol_len <= elen):
+        pair = FindAlfaAndBeta(evol_len)
+        plot1.append(pair[0])
+        plot2.append(pair[1])
+        evol_len += dx
+    plt.plot(plot1, plot2, color = 'pink', label = 'Эволюта')
+
+def PrintCircle(t): #Построние круга кривизны (вместе с радиусом кривизны)
+    alfabeta = FindAlfaAndBeta(t)
+    R = FindRadius(t)
+    plot3 = []
+    plot4 = []
+    i = -5
+    while i < 5:
+        x = R * math.cos(i) + alfabeta[0]
+        y = R * math.sin(i) + alfabeta[1]
+        plot3.append(x)
+        plot4.append(y)
+        i += 0.005
+    plt.plot(plot3, plot4, color='blue', label='Круг кривизны')
+
+def SetSettings(): #Настройка параметров координатной плоскости
+    plt.ylim(-ylen, ylen)
+    plt.xlim(-xlen, xlen)
+    plt.title("Эволюта к графику", fontsize=16, color="black")
+    plt.ylabel("Ось Y", fontsize=14, color="black")
+    plt.xlabel("Ось X", fontsize=14, color="black")
+
+
+
+i = -flen
+plt.ion()
+while True:
+    plt.clf()
+    PrintOriginalFunc()
+    PrintEvolute()
+    PrintCircle(i)
+    SetSettings()
+    plt.legend()
+    plt.grid()
+    plt.draw()
+    plt.gcf().canvas.flush_events()
+    i += dx
+plt.ioff()
+plt.show()
